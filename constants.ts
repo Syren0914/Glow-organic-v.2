@@ -74,7 +74,7 @@ export const SERVICE_CATEGORIES = [
         id: 'c4',
         title: 'Radio Frequency Toning',
         description: 'Uses controlled RF energy to heat deeper skin layers. Stimulates collagen and elastic fiber production to improve elasticity, tone, and reduce wrinkles and sagging.',
-        price: '$120.00',
+        price: '$180.00',
         duration: '1 hr'
       },
       {
