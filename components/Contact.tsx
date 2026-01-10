@@ -37,7 +37,7 @@ const Contact: React.FC = () => {
                    </div>
                    <div>
                      <h4 className="text-lg font-serif text-white mb-2">Inquiries</h4>
-                     <p className="leading-relaxed">hello@gloworganic.com<br/>+1 (415) 555-0198</p>
+                     <p className="leading-relaxed">hello@gloworganic.com<br/>+1 (703) 501-9963</p>
                    </div>
                  </div>
 
@@ -47,7 +47,8 @@ const Contact: React.FC = () => {
                    </div>
                    <div>
                      <h4 className="text-lg font-serif text-white mb-2">Studio Hours</h4>
-                     <p className="leading-relaxed">Tuesday - Saturday<br/>10:00 AM - 7:00 PM</p>
+                     <p className="leading-relaxed">Monday, Tuesday <br/>10:00 AM - 7:00 PM</p>
+                     <p className="leading-relaxed">Wednesday <br/>10:00 AM - 4:00 PM</p>
                    </div>
                  </div>
               </div>
@@ -82,7 +83,7 @@ const Contact: React.FC = () => {
                </a>
 
                <p className="mt-6 text-xs text-forest-500 uppercase tracking-wider relative z-10">
-                 * Deposits required for first-time guests
+                Regular pop-up appointments at My Wellness Physicians
                </p>
             </div>
           </Reveal>
