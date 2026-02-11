@@ -79,7 +79,7 @@ const Contact: React.FC = () => {
                  rel="noopener noreferrer"
                  className="inline-block w-full bg-forest-900 text-cream-50 font-bold uppercase tracking-[0.2em] py-5 rounded-xl hover:bg-forest-800 transition-all hover:scale-[1.02] shadow-lg relative z-10"
                >
-                 Book on Squarespace
+                 Book An Appointment
                </a>
 
                 <p className="mt-6 text-xs text-forest-500 uppercase tracking-wider relative z-10">
