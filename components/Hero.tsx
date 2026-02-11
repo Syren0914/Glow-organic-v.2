@@ -24,7 +24,7 @@ const Hero: React.FC = () => {
         <div className="w-full lg:w-[60%] h-full relative overflow-hidden">
           <img 
             src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070&auto=format&fit=crop" 
-            alt="Minimalist organic skincare texture" 
+            alt="Minimalist aesthetic skincare texture" 
             className={`w-full h-full object-cover opacity-90 transition-transform duration-[2s] ease-out ${loaded ? 'scale-100' : 'scale-110'}`}
           />
           <div className="absolute inset-0 bg-forest-900/10 mix-blend-multiply"></div>
@@ -37,7 +37,7 @@ const Hero: React.FC = () => {
            <div className="bg-cream-100/80 backdrop-blur-sm p-8 md:p-12 lg:bg-transparent lg:p-0 rounded-2xl lg:rounded-2xl shadow-sm lg:shadow-none border border-cream-200 lg:border-none">
               <Reveal delay={0.2}>
                 <span className="inline-block text-forest-800 text-xs font-bold tracking-[0.2em] uppercase mb-6 border border-forest-800/30 px-3 py-1 rounded-full">
-                  Est. 2024 • Glow Organic Skincare
+                  Est. 2024 • Glow Organic Studio
                 </span>
               </Reveal>
               

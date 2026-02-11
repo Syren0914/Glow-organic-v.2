@@ -20,7 +20,7 @@ const About: React.FC = () => {
               <Reveal>
                 <span className="text-sage-600 font-bold tracking-widest uppercase text-xs mb-4 block">Our Philosophy</span>
                 <h2 className="text-4xl md:text-5xl font-serif text-forest-900 mb-8 leading-tight">
-                  Rooted in Nature, <br/>
+                  Rooted in Botanical Wisdom, <br/>
                   <span className="italic text-sage-600">Refined by Science.</span>
                 </h2>
                 <div className="space-y-6 text-forest-800/80 font-light text-lg leading-relaxed text-justify">

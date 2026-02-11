@@ -48,7 +48,7 @@ const GlowAI: React.FC = () => {
             Intelligent Skin <span className="italic text-sage-300">Analysis</span>
           </h2>
           <p className="text-cream-200/60 max-w-lg mx-auto font-light leading-relaxed">
-            Our AI concierge is trained on our organic protocols. Describe your concerns to receive a tailored regimen recommendation.
+            Our AI concierge is trained on our holistic protocols. Describe your concerns to receive a tailored regimen recommendation.
           </p>
         </div>
 

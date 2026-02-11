@@ -23,10 +23,10 @@ const Machines: React.FC = () => {
                </div>
                <h2 className="text-5xl md:text-7xl font-serif text-white mb-6 leading-none">
                  The Intersection of <br/>
-                 <span className="italic text-sage-400 font-light">Nature & Tech</span>
+                 <span className="italic text-sage-400 font-light">Wisdom & Tech</span>
                </h2>
                <p className="text-cream-200/60 font-light leading-relaxed text-lg max-w-xl">
-                  We elevate organic skincare with non-invasive, clinical-grade technology. No harsh lasers, just pure energy and vibration working in harmony with your body.
+                  We elevate holistic skincare with non-invasive, clinical-grade technology. No harsh lasers, just pure energy and vibration working in harmony with your body.
                </p>
             </div>
             

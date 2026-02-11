@@ -96,7 +96,7 @@ export const SERVICE_CATEGORIES = [
       {
         id: 'b1',
         title: 'Body Detox & Slimming',
-        description: 'Targets stubborn curves (waist, hips, arms, legs). Promotes fat reduction, cellulite reduction, enhanced circulation, and metabolism boost using organic potent ingredients.',
+        description: 'Targets stubborn curves (waist, hips, arms, legs). Promotes fat reduction, cellulite reduction, enhanced circulation, and metabolism boost using potent botanical ingredients.',
         price: '$150.00',
         duration: '1 hr 30 min'
       },
@@ -147,7 +147,7 @@ export const MACHINES = [
 export const FEATURES = [
   {
     icon: Leaf,
-    title: '100% Organic',
+    title: 'Botanical Purity',
     description: 'We use only the finest plant-based ingredients sourced from sustainable farms.'
   },
   {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, Fragment } from 'react';
-import { Leaf, Check, Clock, DollarSign, LogOut, ChevronRight, Save } from 'lucide-react';
+import { Leaf, Check, Clock, DollarSign, LogOut, ChevronRight, Save, Home, Plus } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { ServiceCategory, ServiceItem } from '../types';
 import { getSupabaseClient } from '../services/supabaseClient';
@@ -91,6 +91,7 @@ const AdminPanel: React.FC = () => {
       setAuthError(signInError.message);
     } else {
       setPassword('');
+      window.location.hash = '#AdminPanel';
     }
   };
 
@@ -101,7 +102,7 @@ const AdminPanel: React.FC = () => {
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: window.location.origin + '/#AdminPanel'
       }
     });
 
@@ -113,37 +114,55 @@ const AdminPanel: React.FC = () => {
   const handleSignOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    window.location.href = '/';
   };
 
-  const handleSaveCategory = async (category: ServiceCategory) => {
-    if (!supabase) return;
+  const handleSaveCategory = async (category: ServiceCategory): Promise<boolean> => {
+    if (!supabase) return false;
+    if (usingFallback) {
+      setSaveError('Supabase is not connected. Edits cannot be saved.');
+      return false;
+    }
     setSavingId(category.id);
     setSaveError(null);
 
-    const { error: updateError } = await supabase
+    const { data, error: updateError } = await supabase
       .from('service_categories')
       .update({
         title: category.title,
         description: category.description,
         sort_order: category.sortOrder ?? null
       })
-      .eq('id', category.id);
+      .eq('id', category.id)
+      .select('id');
 
     if (updateError) {
       setSaveError(updateError.message);
+      await reload();
+      setSavingId(null);
+      return false;
+    } else if (!data || data.length === 0) {
+      setSaveError('No rows updated. Ensure your account is listed in admin_users.');
+      await reload();
+      setSavingId(null);
+      return false;
     } else {
       await reload();
+      setSavingId(null);
+      return true;
     }
-
-    setSavingId(null);
   };
 
-  const handleSaveItem = async (item: ServiceItem, categoryId: string) => {
-    if (!supabase) return;
+  const handleSaveItem = async (item: ServiceItem, categoryId: string): Promise<boolean> => {
+    if (!supabase) return false;
+    if (usingFallback) {
+      setSaveError('Supabase is not connected. Edits cannot be saved.');
+      return false;
+    }
     setSavingId(item.id);
     setSaveError(null);
 
-    const { error: updateError } = await supabase
+    const { data, error: updateError } = await supabase
       .from('service_items')
       .update({
         title: item.title,
@@ -153,22 +172,96 @@ const AdminPanel: React.FC = () => {
         sort_order: item.sortOrder ?? null,
         category_id: categoryId
       })
-      .eq('id', item.id);
+      .eq('id', item.id)
+      .select('id');
 
     if (updateError) {
       setSaveError(updateError.message);
+      await reload();
+      setSavingId(null);
+      return false;
+    } else if (!data || data.length === 0) {
+      setSaveError('No rows updated. Ensure your account is listed in admin_users.');
+      await reload();
+      setSavingId(null);
+      return false;
     } else {
       await reload();
+      setSavingId(null);
+      return true;
     }
+  };
 
+  const handleAddCategory = async () => {
+    if (!supabase) return;
+    if (usingFallback) {
+      setSaveError('Supabase is not connected. New categories cannot be saved.');
+      return;
+    }
+    setSavingId('new-category');
+    
+    const { data, error: insertError } = await supabase
+      .from('service_categories')
+      .insert({
+        title: 'New Category',
+        description: 'Describe this category',
+        sort_order: editableCategories.length
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      setSaveError(insertError.message);
+    } else {
+      await reload();
+      if (data) setActiveCategoryId(data.id);
+    }
     setSavingId(null);
   };
 
+  const handleAddItem = async (categoryId: string) => {
+    if (!supabase) return;
+    if (usingFallback) {
+      setSaveError('Supabase is not connected. New items cannot be saved.');
+      return;
+    }
+    setSavingId('new-item');
+
+    const activeCat = editableCategories.find(c => c.id === categoryId);
+    if (!activeCat) return;
+
+    const { error: insertError } = await supabase
+      .from('service_items')
+      .insert({
+        category_id: categoryId,
+        title: 'New Service',
+        description: 'Service description',
+        price: '$0.00',
+        duration: '30 min',
+        sort_order: activeCat.items.length
+      });
+
+    if (insertError) {
+      setSaveError(insertError.message);
+    } else {
+      await reload();
+    }
+    setSavingId(null);
+  };
+
+  // Auto-select first category on load
   useEffect(() => {
     if (editableCategories.length > 0 && !activeCategoryId) {
       setActiveCategoryId(editableCategories[0].id);
     }
   }, [editableCategories, activeCategoryId]);
+
+  // Also ensure selection when data loads after auth
+  useEffect(() => {
+    if (!loading && categories.length > 0 && !activeCategoryId) {
+      setActiveCategoryId(categories[0].id);
+    }
+  }, [loading, categories, activeCategoryId]);
 
   const activeCategory = useMemo(() => 
     editableCategories.find(c => c.id === activeCategoryId),
@@ -181,13 +274,13 @@ const AdminPanel: React.FC = () => {
   };
 
   const wrapSaveCategory = async (cat: ServiceCategory) => {
-    await handleSaveCategory(cat);
-    onSaveComplete(cat.id);
+    const success = await handleSaveCategory(cat);
+    if (success) onSaveComplete(cat.id);
   };
 
   const wrapSaveItem = async (item: ServiceItem, catId: string) => {
-    await handleSaveItem(item, catId);
-    onSaveComplete(item.id);
+    const success = await handleSaveItem(item, catId);
+    if (success) onSaveComplete(item.id);
   };
 
 
@@ -339,8 +432,9 @@ const AdminPanel: React.FC = () => {
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-b border-[#F0EDE6] z-50 px-6 lg:px-10 flex items-center justify-between">
         <div className="flex items-center gap-6">
-           <a href="/" className="p-2 hover:bg-[#F8F6F1] rounded-full transition-colors">
-              <LogOut className="w-5 h-5 text-forest-500 rotate-180" />
+           <a href="/" className="flex items-center gap-2 p-2 px-3 hover:bg-[#F8F6F1] rounded-xl transition-colors text-forest-800">
+              <Home className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Back to Site</span>
            </a>
            <div className="h-6 w-px bg-[#F0EDE6]"></div>
            <div className="flex items-center gap-3">
@@ -387,12 +481,38 @@ const AdminPanel: React.FC = () => {
                     <ChevronRight className={`w-4 h-4 transition-transform ${activeCategoryId === category.id ? 'translate-x-1 opacity-100' : 'opacity-0'}`} />
                   </button>
                 ))}
-             </nav>
+                 
+                 <button
+                   onClick={handleAddCategory}
+                   disabled={savingId === 'new-category'}
+                   className="w-full mt-4 flex items-center gap-3 px-5 py-4 text-sage-600 hover:text-forest-900 hover:bg-sage-50 rounded-2xl transition-all border border-dashed border-sage-200"
+                 >
+                   <Plus className="w-4 h-4" />
+                   <span className="text-xs font-bold uppercase tracking-widest">Add Category</span>
+                 </button>
+              </nav>
           </div>
         </aside>
 
         {/* Editor Body */}
         <main className="flex-1 overflow-y-auto bg-[#FDFCF9] p-6 lg:p-12">
+          {(usingFallback || error) && (
+            <div className="max-w-4xl mx-auto mb-8">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                {usingFallback && (
+                  <p>
+                    Supabase data is not loading. You are seeing local fallback data and edits
+                    cannot be saved.
+                  </p>
+                )}
+                {error && (
+                  <p className="mt-2 text-amber-900/80">
+                    Supabase error: {error}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
           {activeCategory ? (
             <div className="max-w-4xl mx-auto space-y-12">
               
@@ -495,9 +615,20 @@ const AdminPanel: React.FC = () => {
                             </div>
 
                          </div>
-                      </div>
-                    ))}
-                 </div>
+                       </div>
+                     ))}
+
+                     <button
+                       onClick={() => handleAddItem(activeCategory.id)}
+                       disabled={savingId === 'new-item'}
+                       className="w-full py-10 bg-cream-50 border-2 border-dashed border-cream-200 rounded-[2rem] text-forest-900/40 hover:text-sage-600 hover:border-sage-200 hover:bg-sage-50/30 transition-all flex flex-col items-center justify-center gap-3 group"
+                     >
+                       <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                         <Plus className="w-6 h-6" />
+                       </div>
+                       <span className="text-xs font-bold uppercase tracking-[0.2em]">Add New Service Item</span>
+                     </button>
+                  </div>
               </section>
 
               {saveError && (
