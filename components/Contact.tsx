@@ -82,9 +82,17 @@ const Contact: React.FC = () => {
                  Book on Squarespace
                </a>
 
-               <p className="mt-6 text-xs text-forest-500 uppercase tracking-wider relative z-10">
-                Regular pop-up appointments at My Wellness Physicians
-               </p>
+                <p className="mt-6 text-xs text-forest-500 uppercase tracking-wider relative z-10">
+                 Specialized clinical pop-ups in partnership with <br/>
+                 <a 
+                   href="https://mywellnessphysicians.com" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="text-sage-600 font-bold hover:text-forest-900 transition-colors border-b border-sage-200 hover:border-forest-900"
+                 >
+                   My Wellness Physicians
+                 </a>
+                </p>
             </div>
           </Reveal>
 
@@ -131,7 +139,14 @@ const Contact: React.FC = () => {
       {/* Footer Links */}
       <div className="bg-forest-950 py-8 border-t border-forest-800/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row justify-between items-center text-xs text-forest-500 uppercase tracking-wider">
-          <p>© 2024 Glow Organic.</p>
+          <div className="flex items-center gap-4">
+            <p>© 2024 Glow Organic.</p>
+            <a href="#AdminPanel" className="opacity-40 hover:opacity-100 transition-opacity">
+               <div className="w-4 h-4 rounded-full border border-forest-500 flex items-center justify-center overflow-hidden">
+                  <div className="w-2 h-2 bg-sage-500 rounded-full animate-pulse"></div>
+               </div>
+            </a>
+          </div>
           <div className="flex gap-8 mt-4 md:mt-0">
             <a href="#" className="hover:text-cream-200 transition-colors">Privacy</a>
             <a href="#" className="hover:text-cream-200 transition-colors">Terms</a>

@@ -49,7 +49,7 @@ const Owner: React.FC = () => {
               
               <div className="space-y-6 text-forest-900/80 font-light leading-relaxed text-lg border-l-2 border-cream-200 pl-6 md:pl-0 md:border-none">
                 <p>
-                  Welcome to Glow Organic! I'm Zula, the proud owner and founder of this skincare sanctuary. With a passion for natural beauty and holistic wellness, I created Glow Organic to provide a welcoming space where everyone can discover their healthiest skin.
+                  Welcome to Glow Organic! I'm Zula, the proud owner and founder of this skincare sanctuary. With a passion for holistic beauty and wellness, I created Glow Organic to provide a welcoming space where everyone can discover their healthiest skin.
                 </p>
                 
                 <h4 className="text-xl font-serif text-forest-900 mt-8 mb-2">My Journey</h4>
@@ -59,7 +59,7 @@ const Owner: React.FC = () => {
 
                 <h4 className="text-xl font-serif text-forest-900 mt-8 mb-2">My Passion</h4>
                 <p>
-                  At Glow Organic, my mission is to empower my clients to embrace their natural beauty. I am committed to continuous education in the latest skincare techniques and trends, ensuring that you receive the highest quality care and the best results possible.
+                  At Glow Organic, my mission is to empower my clients to embrace their inherent glow. I am committed to continuous education in the latest skincare techniques and trends, ensuring that you receive the highest quality care and the best results possible.
                 </p>
               </div>
 

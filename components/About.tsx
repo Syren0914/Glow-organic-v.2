@@ -30,6 +30,9 @@ const About: React.FC = () => {
                   <p>
                     Our studio uses exclusively cold-pressed oils, raw botanical extracts, and mineral-rich clays. We reject synthetic fragrances and harsh preservatives in favor of ingredients that work in harmony with your skin's microbiome.
                   </p>
+                  <p className="pt-4 border-t border-cream-300">
+                    <span className="font-semibold text-forest-900">Clinical Partnership:</span> We are proud to collaborate with <a href="https://mywellnessphysicians.com" target="_blank" rel="noopener noreferrer" className="text-sage-600 hover:text-forest-900 transition-colors underline underline-offset-4 decoration-sage-300">My Wellness Physicians</a> to bridge the gap between holistic skincare and medical-grade wellness.
+                  </p>
                 </div>
                 
                 <div className="mt-12 p-8 bg-white border border-cream-200 rounded-xl">

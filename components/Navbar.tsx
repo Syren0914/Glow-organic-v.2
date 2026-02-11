@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Leaf, Menu, X } from 'lucide-react';
 import { NAVIGATION_LINKS } from '../constants';
 
 const Navbar: React.FC = () => {
@@ -50,10 +50,19 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center">
           
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center cursor-pointer group" onClick={scrollToTop}>
-            <span className={`text-3xl md:text-4xl font-serif tracking-wide transition-colors duration-300 ${scrolled ? 'text-forest-900' : 'text-forest-900'}`}>
-              glow <span className="font-semibold italic text-sage-600 group-hover:text-forest-900 transition-colors duration-500">organic</span>.
-            </span>
+          <div className="flex-shrink-0 flex items-center gap-3">
+            <div className="cursor-pointer group" onClick={scrollToTop}>
+              <span className={`text-3xl md:text-4xl font-serif tracking-wide transition-colors duration-300 ${scrolled ? 'text-forest-900' : 'text-forest-900'}`}>
+                glow <span className="font-semibold italic text-sage-600 group-hover:text-forest-900 transition-colors duration-500">organic</span>.
+              </span>
+            </div>
+            <a 
+              href="#AdminPanel" 
+              className="text-sage-500 opacity-60 hover:opacity-100 hover:text-forest-900 transition-all duration-300 transform hover:scale-110 px-2"
+              title="Admin Portal"
+            >
+               <Leaf className="w-5 h-5 animate-pulse" />
+            </a>
           </div>
 
           {/* Desktop Menu */}

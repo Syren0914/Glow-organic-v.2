@@ -7,6 +7,23 @@ export interface Service {
   image: string;
 }
 
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  duration: string;
+  sortOrder?: number;
+}
+
+export interface ServiceCategory {
+  id: string;
+  title: string;
+  description: string;
+  sortOrder?: number;
+  items: ServiceItem[];
+}
+
 export interface Testimonial {
   id: string;
   name: string;
@@ -25,5 +42,6 @@ export enum NavLink {
   SERVICES = 'services',
   ABOUT = 'about',
   CONSULT = 'consult',
-  CONTACT = 'contact'
+  CONTACT = 'contact',
+  ADMIN = 'admin'
 }

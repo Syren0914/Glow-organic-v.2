@@ -37,7 +37,7 @@ const Hero: React.FC = () => {
            <div className="bg-cream-100/80 backdrop-blur-sm p-8 md:p-12 lg:bg-transparent lg:p-0 rounded-2xl lg:rounded-2xl shadow-sm lg:shadow-none border border-cream-200 lg:border-none">
               <Reveal delay={0.2}>
                 <span className="inline-block text-forest-800 text-xs font-bold tracking-[0.2em] uppercase mb-6 border border-forest-800/30 px-3 py-1 rounded-full">
-                  Est. 2024 • Organic Skincare
+                  Est. 2024 • Glow Organic Skincare
                 </span>
               </Reveal>
               
@@ -50,7 +50,7 @@ const Hero: React.FC = () => {
 
               <Reveal delay={0.6}>
                 <p className="text-lg text-forest-800/80 mb-10 max-w-md font-light leading-relaxed">
-                  Reconnect with your skin’s natural rhythm through our curated selection of organic treatments and botanical science.
+                  Reconnect with your skin’s innate rhythm through our curated selection of our treatments and botanical science.
                 </p>
               </Reveal>
               

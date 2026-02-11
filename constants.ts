@@ -11,6 +11,7 @@ export const NAVIGATION_LINKS = [
 
 export const SERVICE_CATEGORIES = [
   {
+    id: 'signature-facials',
     title: "Signature Facials",
     description: "Holistic treatments for immediate glow and deep cleansing.",
     items: [
@@ -45,6 +46,7 @@ export const SERVICE_CATEGORIES = [
     ]
   },
   {
+    id: 'clinical-rejuvenation',
     title: "Clinical Rejuvenation",
     description: "Advanced modalities for structural lifting and resurfacing.",
     items: [
@@ -87,13 +89,14 @@ export const SERVICE_CATEGORIES = [
     ]
   },
   {
+    id: 'body-enhancements',
     title: "Body & Enhancements",
     description: "Targeted treatments for body sculpting and finishing touches.",
     items: [
       {
         id: 'b1',
         title: 'Body Detox & Slimming',
-        description: 'Targets stubborn curves (waist, hips, arms, legs). Promotes fat reduction, cellulite reduction, enhanced circulation, and metabolism boost using natural potent ingredients.',
+        description: 'Targets stubborn curves (waist, hips, arms, legs). Promotes fat reduction, cellulite reduction, enhanced circulation, and metabolism boost using organic potent ingredients.',
         price: '$150.00',
         duration: '1 hr 30 min'
       },
@@ -150,7 +153,7 @@ export const FEATURES = [
   {
     icon: Droplets,
     title: 'Hydration Focused',
-    description: 'Our treatments prioritize deep hydration to restore your natural moisture barrier.'
+    description: 'Our treatments prioritize deep hydration to restore your skin\'s essential moisture barrier.'
   },
   {
     icon: Sun,

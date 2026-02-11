@@ -1,9 +1,10 @@
 import React from 'react';
-import { SERVICE_CATEGORIES } from '../constants';
 import { NavLink } from '../types';
 import Reveal from './Reveal';
+import { useServiceMenu } from '../services/useServiceMenu';
 
 const Services: React.FC = () => {
+  const { categories, loading } = useServiceMenu();
   return (
     <section id={NavLink.SERVICES} className="py-32 bg-cream-50 relative">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -23,13 +24,18 @@ const Services: React.FC = () => {
 
         {/* Menu Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
-          
-          {SERVICE_CATEGORIES.map((category, idx) => (
+          {loading && (
+            <div className="lg:col-span-2 text-center text-sm text-forest-800/60">
+              Loading menu...
+            </div>
+          )}
+
+          {categories.map((category, idx) => (
             <Reveal 
-              key={idx} 
+              key={category.id} 
               delay={idx * 0.15}
               className={`flex flex-col ${
-                idx === SERVICE_CATEGORIES.length - 1 && SERVICE_CATEGORIES.length % 2 !== 0 
+                idx === categories.length - 1 && categories.length % 2 !== 0 
                   ? 'lg:col-span-2 lg:max-w-3xl lg:mx-auto w-full' 
                   : ''
               }`}
