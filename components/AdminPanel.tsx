@@ -537,7 +537,50 @@ const AdminPanel: React.FC = () => {
                  </button>
 
                  {editableCategories.map(category => (
-              </nav>
+                    <div key={category.id} className="relative group/cat">
+                      {confirmDeleteId === category.id ? (
+                        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-2xl">
+                          <span className="text-xs text-red-700 font-medium flex-1">Delete?</span>
+                          <button
+                            onClick={() => handleDeleteCategory(category.id)}
+                            disabled={savingId === `delete-${category.id}`}
+                            className="px-3 py-1.5 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-red-700 transition-colors"
+                          >
+                            {savingId === `delete-${category.id}` ? '...' : 'Yes'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="p-1.5 text-red-400 hover:text-red-600 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setActiveCategoryId(category.id)}
+                          className={`w-full text-left px-5 py-4 rounded-2xl transition-all flex items-center justify-between group ${
+                            activeCategoryId === category.id
+                              ? 'bg-cream-100 text-forest-900 shadow-sm border border-[#E9E4D9]'
+                              : 'text-forest-800/50 hover:bg-[#FDFCF9] hover:text-forest-900'
+                          }`}
+                        >
+                          <span className={`text-sm tracking-wide ${activeCategoryId === category.id ? 'font-semibold' : 'font-medium'}`}>
+                            {category.title || 'Untitled Category'}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(category.id); }}
+                              className="p-1 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover/cat:opacity-100"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            <ChevronRight className={`w-4 h-4 transition-transform ${activeCategoryId === category.id ? 'translate-x-1 opacity-100' : 'opacity-0'}`} />
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+               </nav>
           </div>
         </aside>
 
@@ -672,6 +715,98 @@ const AdminPanel: React.FC = () => {
                      </button>
 
                      {activeCategory.items.map((item) => (
+                       <div
+                         key={item.id}
+                         className="group bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-[#F0EDE6] transition-all hover:shadow-md hover:border-sage-200 relative"
+                       >
+                          {/* Delete Item Button */}
+                          {confirmDeleteId === item.id ? (
+                            <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2 z-10">
+                              <span className="text-[10px] text-red-700 font-bold uppercase tracking-widest">Delete?</span>
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                disabled={savingId === `delete-${item.id}`}
+                                className="px-3 py-1 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-red-700 transition-colors"
+                              >
+                                {savingId === `delete-${item.id}` ? '...' : 'Yes'}
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="p-1 text-red-400 hover:text-red-600 transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteId(item.id)}
+                              className="absolute top-4 right-4 p-2 rounded-xl text-forest-800/20 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
+
+                             {/* Information Inputs */}
+                             <div className="flex-1 space-y-4">
+                                <input
+                                  value={item.title}
+                                  onChange={(e) => updateItemField(activeCategory.id, item.id, 'title', e.target.value)}
+                                  className="text-xl font-serif text-forest-900 w-full border-none focus:ring-0 p-0 placeholder-forest-900/20"
+                                  placeholder="Service Name"
+                                />
+                                <textarea
+                                  value={item.description}
+                                  onChange={(e) => updateItemField(activeCategory.id, item.id, 'description', e.target.value)}
+                                  className="w-full text-sm font-light text-forest-800/60 border-none focus:ring-0 p-0 resize-none min-h-[40px]"
+                                  placeholder="Add a detailed description of the service..."
+                                />
+                             </div>
+
+                              {/* Settings / Pricing */}
+                              <div className="w-full lg:w-80 grid grid-cols-2 gap-3 sm:gap-4 mt-2 lg:mt-0">
+                                 <div className="relative">
+                                    <label className="block text-[8px] font-bold uppercase tracking-widest text-forest-800/40 mb-1 ml-1 lg:hidden">Price</label>
+                                    <div className="relative">
+                                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sage-500" />
+                                       <input
+                                         value={item.price}
+                                         onChange={(e) => updateItemField(activeCategory.id, item.id, 'price', e.target.value)}
+                                         className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-forest-900 focus:border-sage-300 transition-colors"
+                                         placeholder="0.00"
+                                       />
+                                    </div>
+                                 </div>
+                                 <div className="relative">
+                                    <label className="block text-[8px] font-bold uppercase tracking-widest text-forest-800/40 mb-1 ml-1 lg:hidden">Duration</label>
+                                    <div className="relative">
+                                       <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sage-500" />
+                                       <input
+                                         value={item.duration}
+                                         onChange={(e) => updateItemField(activeCategory.id, item.id, 'duration', e.target.value)}
+                                         className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-forest-900 focus:border-sage-300 transition-colors"
+                                         placeholder="55 min"
+                                       />
+                                    </div>
+                                 </div>
+                                 <button
+                                   onClick={() => wrapSaveItem(item, activeCategory.id)}
+                                   disabled={savingId === item.id}
+                                   className={`col-span-2 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                                     justSavedId === item.id
+                                       ? 'bg-sage-600 text-white shadow-lg shadow-sage-600/20'
+                                       : 'bg-forest-900 text-cream-50 hover:bg-forest-800'
+                                   }`}
+                                 >
+                                   {justSavedId === item.id ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                                   {savingId === item.id ? 'Saving...' : justSavedId === item.id ? 'Changes Saved' : 'Update Service'}
+                                 </button>
+                              </div>
+
+                          </div>
+                        </div>
+                      ))}
                   </div>
               </section>
 
