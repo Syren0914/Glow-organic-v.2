@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, Fragment } from 'react';
-import { Leaf, Check, Clock, DollarSign, LogOut, ChevronRight, Save, Home, Plus } from 'lucide-react';
+import { Leaf, Check, Clock, DollarSign, LogOut, ChevronRight, Save, Home, Plus, Trash2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { ServiceCategory, ServiceItem } from '../types';
 import { getSupabaseClient } from '../services/supabaseClient';
@@ -17,6 +17,15 @@ const AdminPanel: React.FC = () => {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [justSavedId, setJustSavedId] = useState<string | null>(null);
   const [editableCategories, setEditableCategories] = useState<ServiceCategory[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  
+  // Modal states
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showItemModal, setShowItemModal] = useState<string | null>(null); // holds categoryId
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newPrice, setNewPrice] = useState('$0.00');
+  const [newDuration, setNewDuration] = useState('30 min');
 
   const adminEmails = useMemo(() => {
     const raw = (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? '';
@@ -203,8 +212,8 @@ const AdminPanel: React.FC = () => {
     const { data, error: insertError } = await supabase
       .from('service_categories')
       .insert({
-        title: 'New Category',
-        description: 'Describe this category',
+        title: newTitle || 'New Category',
+        description: newDescription || 'Describe this category',
         sort_order: editableCategories.length
       })
       .select()
@@ -215,6 +224,9 @@ const AdminPanel: React.FC = () => {
     } else {
       await reload();
       if (data) setActiveCategoryId(data.id);
+      setShowCategoryModal(false);
+      setNewTitle('');
+      setNewDescription('');
     }
     setSavingId(null);
   };
@@ -234,10 +246,10 @@ const AdminPanel: React.FC = () => {
       .from('service_items')
       .insert({
         category_id: categoryId,
-        title: 'New Service',
-        description: 'Service description',
-        price: '$0.00',
-        duration: '30 min',
+        title: newTitle || 'New Service',
+        description: newDescription || 'Service description',
+        price: newPrice,
+        duration: newDuration,
         sort_order: activeCat.items.length
       });
 
@@ -245,23 +257,73 @@ const AdminPanel: React.FC = () => {
       setSaveError(insertError.message);
     } else {
       await reload();
+      setShowItemModal(null);
+      setNewTitle('');
+      setNewDescription('');
+      setNewPrice('$0.00');
+      setNewDuration('30 min');
     }
     setSavingId(null);
   };
 
-  // Auto-select first category on load
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (!supabase) return;
+    if (usingFallback) {
+      setSaveError('Supabase is not connected. Deletions cannot be saved.');
+      return;
+    }
+    setSavingId(`delete-${categoryId}`);
+    setSaveError(null);
+
+    const { error: deleteError } = await supabase
+      .from('service_categories')
+      .delete()
+      .eq('id', categoryId);
+
+    if (deleteError) {
+      setSaveError(deleteError.message);
+    } else {
+      if (activeCategoryId === categoryId) {
+        const remaining = editableCategories.filter(c => c.id !== categoryId);
+        setActiveCategoryId(remaining.length > 0 ? remaining[0].id : null);
+      }
+      await reload();
+    }
+    setSavingId(null);
+    setConfirmDeleteId(null);
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    if (!supabase) return;
+    if (usingFallback) {
+      setSaveError('Supabase is not connected. Deletions cannot be saved.');
+      return;
+    }
+    setSavingId(`delete-${itemId}`);
+    setSaveError(null);
+
+    const { error: deleteError } = await supabase
+      .from('service_items')
+      .delete()
+      .eq('id', itemId);
+
+    if (deleteError) {
+      setSaveError(deleteError.message);
+    } else {
+      await reload();
+    }
+    setSavingId(null);
+    setConfirmDeleteId(null);
+  };
+
+  // Auto-select first category, or fix stale/missing selection
   useEffect(() => {
-    if (editableCategories.length > 0 && !activeCategoryId) {
+    if (editableCategories.length === 0) return;
+    const selectionValid = activeCategoryId && editableCategories.some(c => c.id === activeCategoryId);
+    if (!selectionValid) {
       setActiveCategoryId(editableCategories[0].id);
     }
   }, [editableCategories, activeCategoryId]);
-
-  // Also ensure selection when data loads after auth
-  useEffect(() => {
-    if (!loading && categories.length > 0 && !activeCategoryId) {
-      setActiveCategoryId(categories[0].id);
-    }
-  }, [loading, categories, activeCategoryId]);
 
   const activeCategory = useMemo(() => 
     editableCategories.find(c => c.id === activeCategoryId),
@@ -430,29 +492,30 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FDFCF9] flex flex-col text-[#102319]">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-b border-[#F0EDE6] z-50 px-6 lg:px-10 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-           <a href="/" className="flex items-center gap-2 p-2 px-3 hover:bg-[#F8F6F1] rounded-xl transition-colors text-forest-800">
+      <header className="fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-b border-[#F0EDE6] z-50 px-4 lg:px-10 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-6">
+           <a href="/" className="flex items-center gap-2 p-2 hover:bg-[#F8F6F1] rounded-xl transition-colors text-forest-800">
               <Home className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Back to Site</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest hidden xs:block">Back</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest hidden md:block"> to Site</span>
            </a>
-           <div className="h-6 w-px bg-[#F0EDE6]"></div>
-           <div className="flex items-center gap-3">
-              <Leaf className="w-6 h-6 text-sage-500" />
-              <h2 className="text-xl font-serif">Menu <span className="italic font-light text-sage-600 ml-1">Editor</span></h2>
+           <div className="h-6 w-px bg-[#F0EDE6] hidden xs:block"></div>
+           <div className="flex items-center gap-2 sm:gap-3">
+              <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-sage-500" />
+              <h2 className="text-lg sm:text-xl font-serif whitespace-nowrap">Menu <span className="italic font-light text-sage-600 ml-0.5 sm:ml-1">Editor</span></h2>
            </div>
         </div>
 
-        <div className="flex items-center gap-6">
-           <span className="text-[10px] font-bold uppercase tracking-widest text-forest-800/40 hidden sm:block">
+        <div className="flex items-center gap-3 sm:gap-6">
+           <span className="text-[10px] font-bold uppercase tracking-widest text-forest-800/40 hidden lg:block">
               Authenticated: <span className="text-forest-800/80">{session.user.email}</span>
            </span>
            <button
              onClick={handleSignOut}
-             className="px-5 py-2.5 bg-forest-900 text-cream-50 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-forest-800 transition-all shadow-md shadow-forest-900/10 flex items-center gap-2"
+             className="px-4 sm:px-5 py-2 sm:py-2.5 bg-forest-900 text-cream-50 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-forest-800 transition-all shadow-md shadow-forest-900/10 flex items-center gap-2"
            >
-             <LogOut className="w-3.5 h-3.5" />
-             Sign Out
+             <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+             <span className="hidden xs:block">Sign Out</span>
            </button>
         </div>
       </header>
@@ -464,38 +527,51 @@ const AdminPanel: React.FC = () => {
         <aside className="w-80 bg-white border-r border-[#F0EDE6] hidden lg:flex flex-col overflow-y-auto">
           <div className="p-8">
              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-sage-600 mb-6 block">Categories</span>
-             <nav className="space-y-1">
-                {editableCategories.map(category => (
-                  <button
-                    key={category.id}
-                    onClick={() => setActiveCategoryId(category.id)}
-                    className={`w-full text-left px-5 py-4 rounded-2xl transition-all flex items-center justify-between group ${
-                      activeCategoryId === category.id 
-                        ? 'bg-cream-100 text-forest-900 shadow-sm border border-[#E9E4D9]' 
-                        : 'text-forest-800/50 hover:bg-[#FDFCF9] hover:text-forest-900'
-                    }`}
-                  >
-                    <span className={`text-sm tracking-wide ${activeCategoryId === category.id ? 'font-semibold' : 'font-medium'}`}>
-                      {category.title || 'Untitled Category'}
-                    </span>
-                    <ChevronRight className={`w-4 h-4 transition-transform ${activeCategoryId === category.id ? 'translate-x-1 opacity-100' : 'opacity-0'}`} />
-                  </button>
-                ))}
-                 
+              <nav className="space-y-1">
                  <button
-                   onClick={handleAddCategory}
-                   disabled={savingId === 'new-category'}
-                   className="w-full mt-4 flex items-center gap-3 px-5 py-4 text-sage-600 hover:text-forest-900 hover:bg-sage-50 rounded-2xl transition-all border border-dashed border-sage-200"
+                   onClick={() => setShowCategoryModal(true)}
+                   className="w-full mb-4 flex items-center gap-3 px-5 py-4 text-sage-600 hover:text-forest-900 hover:bg-sage-50 rounded-2xl transition-all border border-dashed border-sage-200"
                  >
                    <Plus className="w-4 h-4" />
                    <span className="text-xs font-bold uppercase tracking-widest">Add Category</span>
                  </button>
+
+                 {editableCategories.map(category => (
               </nav>
           </div>
         </aside>
 
         {/* Editor Body */}
-        <main className="flex-1 overflow-y-auto bg-[#FDFCF9] p-6 lg:p-12">
+        <main className="flex-1 overflow-y-auto bg-[#FDFCF9] p-4 sm:p-6 lg:p-12">
+          
+          {/* Mobile Category Select */}
+          <div className="lg:hidden mb-8">
+            <div className="bg-white rounded-2xl border border-[#F0EDE6] p-2 flex flex-col gap-2">
+               <span className="px-3 pt-2 text-[10px] font-bold uppercase tracking-widest text-forest-800/40">Select Category</span>
+               <div className="flex flex-wrap gap-2 p-1">
+                  {editableCategories.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategoryId(cat.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+                        activeCategoryId === cat.id
+                          ? 'bg-forest-900 text-cream-50 shadow-md'
+                          : 'bg-cream-50 text-forest-800/60 hover:bg-cream-100'
+                      }`}
+                    >
+                      {cat.title}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setShowCategoryModal(true)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-sage-600 bg-sage-50 border border-dashed border-sage-200"
+                  >
+                    + Add New
+                  </button>
+               </div>
+            </div>
+          </div>
+          
           {(usingFallback || error) && (
             <div className="max-w-4xl mx-auto mb-8">
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
@@ -520,18 +596,46 @@ const AdminPanel: React.FC = () => {
               <section className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#F0EDE6]">
                  <div className="flex items-center justify-between mb-8">
                     <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-sage-500">Selected Category</span>
-                    <button
-                      onClick={() => wrapSaveCategory(activeCategory)}
-                      disabled={savingId === activeCategory.id}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                        justSavedId === activeCategory.id 
-                          ? 'bg-sage-600 text-white' 
-                          : 'bg-cream-100 text-forest-900 border border-[#E9E4D9] hover:bg-cream-200'
-                      }`}
-                    >
-                      {justSavedId === activeCategory.id ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                      {savingId === activeCategory.id ? 'Updating...' : justSavedId === activeCategory.id ? 'Saved' : 'Save Category'}
-                    </button>
+                    <div className="flex items-center gap-3">
+                      {confirmDeleteId === `cat-header-${activeCategory.id}` ? (
+                        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-2">
+                          <span className="text-[10px] text-red-700 font-bold uppercase tracking-widest">Delete category & all items?</span>
+                          <button
+                            onClick={() => handleDeleteCategory(activeCategory.id)}
+                            disabled={savingId === `delete-${activeCategory.id}`}
+                            className="px-3 py-1.5 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-red-700 transition-colors"
+                          >
+                            {savingId === `delete-${activeCategory.id}` ? '...' : 'Yes'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="p-1 text-red-400 hover:text-red-600 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(`cat-header-${activeCategory.id}`)}
+                          className="flex items-center gap-2 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="hidden sm:inline">Delete</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => wrapSaveCategory(activeCategory)}
+                        disabled={savingId === activeCategory.id}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                          justSavedId === activeCategory.id
+                            ? 'bg-sage-600 text-white'
+                            : 'bg-cream-100 text-forest-900 border border-[#E9E4D9] hover:bg-cream-200'
+                        }`}
+                      >
+                        {justSavedId === activeCategory.id ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                        {savingId === activeCategory.id ? 'Updating...' : justSavedId === activeCategory.id ? 'Saved' : 'Save Category'}
+                      </button>
+                    </div>
                  </div>
 
                  <div className="space-y-6">
@@ -556,71 +660,9 @@ const AdminPanel: React.FC = () => {
                     <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-forest-900">Service Items <span className="font-light text-forest-800/40 ml-1">({activeCategory.items.length})</span></h3>
                  </div>
 
-                 <div className="grid gap-6">
-                    {activeCategory.items.map((item) => (
-                      <div 
-                        key={item.id} 
-                        className="group bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-[#F0EDE6] transition-all hover:shadow-md hover:border-sage-200"
-                      >
-                         <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
-                            
-                            {/* Information Inputs */}
-                            <div className="flex-1 space-y-4">
-                               <input
-                                 value={item.title}
-                                 onChange={(e) => updateItemField(activeCategory.id, item.id, 'title', e.target.value)}
-                                 className="text-xl font-serif text-forest-900 w-full border-none focus:ring-0 p-0 placeholder-forest-900/20"
-                                 placeholder="Service Name"
-                               />
-                               <textarea
-                                 value={item.description}
-                                 onChange={(e) => updateItemField(activeCategory.id, item.id, 'description', e.target.value)}
-                                 className="w-full text-sm font-light text-forest-800/60 border-none focus:ring-0 p-0 resize-none min-h-[40px]"
-                                 placeholder="Add a detailed description of the service..."
-                               />
-                            </div>
-
-                            {/* Settings / Pricing */}
-                            <div className="lg:w-80 grid grid-cols-2 gap-4">
-                               <div className="relative">
-                                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sage-500" />
-                                  <input
-                                    value={item.price}
-                                    onChange={(e) => updateItemField(activeCategory.id, item.id, 'price', e.target.value)}
-                                    className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-forest-900 focus:border-sage-300 transition-colors"
-                                    placeholder="0.00"
-                                  />
-                               </div>
-                               <div className="relative">
-                                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sage-500" />
-                                  <input
-                                    value={item.duration}
-                                    onChange={(e) => updateItemField(activeCategory.id, item.id, 'duration', e.target.value)}
-                                    className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-forest-900 focus:border-sage-300 transition-colors"
-                                    placeholder="55 min"
-                                  />
-                               </div>
-                               <button
-                                 onClick={() => wrapSaveItem(item, activeCategory.id)}
-                                 disabled={savingId === item.id}
-                                 className={`col-span-2 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                                   justSavedId === item.id 
-                                     ? 'bg-sage-600 text-white shadow-lg shadow-sage-600/20' 
-                                     : 'bg-forest-900 text-cream-50 hover:bg-forest-800'
-                                 }`}
-                               >
-                                 {justSavedId === item.id ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                                 {savingId === item.id ? 'Saving...' : justSavedId === item.id ? 'Changes Saved' : 'Update Service'}
-                               </button>
-                            </div>
-
-                         </div>
-                       </div>
-                     ))}
-
+                  <div className="grid gap-6">
                      <button
-                       onClick={() => handleAddItem(activeCategory.id)}
-                       disabled={savingId === 'new-item'}
+                       onClick={() => setShowItemModal(activeCategory.id)}
                        className="w-full py-10 bg-cream-50 border-2 border-dashed border-cream-200 rounded-[2rem] text-forest-900/40 hover:text-sage-600 hover:border-sage-200 hover:bg-sage-50/30 transition-all flex flex-col items-center justify-center gap-3 group"
                      >
                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
@@ -628,6 +670,8 @@ const AdminPanel: React.FC = () => {
                        </div>
                        <span className="text-xs font-bold uppercase tracking-[0.2em]">Add New Service Item</span>
                      </button>
+
+                     {activeCategory.items.map((item) => (
                   </div>
               </section>
 
@@ -652,9 +696,117 @@ const AdminPanel: React.FC = () => {
                   <p className="text-forest-800/40 max-w-xs mx-auto text-sm leading-relaxed">Choose a service classification from the sidebar to begin editing.</p>
                </div>
             </div>
-          )}
-        </main>
-      </div>
+           )}
+         </main>
+       </div>
+
+       {/* Add Category Modal */}
+       {showCategoryModal && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-forest-900/40 backdrop-blur-sm">
+           <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-8 border border-cream-200">
+             <div className="flex items-center justify-between mb-8">
+               <h3 className="text-2xl font-serif text-forest-900">New Category</h3>
+               <button onClick={() => setShowCategoryModal(false)} className="p-2 hover:bg-cream-50 rounded-full transition-colors">
+                 <X className="w-5 h-5 text-forest-800/40" />
+               </button>
+             </div>
+             <div className="space-y-6">
+               <div className="space-y-2">
+                 <label className="block text-[10px] font-bold uppercase tracking-widest text-forest-800/60 ml-1">Title</label>
+                 <input
+                   autoFocus
+                   value={newTitle}
+                   onChange={e => setNewTitle(e.target.value)}
+                   className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-sage-300 transition-all text-forest-900"
+                   placeholder="e.g., Facial Therapies"
+                 />
+               </div>
+               <div className="space-y-2">
+                 <label className="block text-[10px] font-bold uppercase tracking-widest text-forest-800/60 ml-1">Description</label>
+                 <textarea
+                   value={newDescription}
+                   onChange={e => setNewDescription(e.target.value)}
+                   className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-sage-300 transition-all text-forest-900 resize-none h-24"
+                   placeholder="Describe this category..."
+                 />
+               </div>
+               <button
+                 onClick={handleAddCategory}
+                 disabled={savingId === 'new-category' || !newTitle}
+                 className="w-full bg-forest-900 text-cream-50 text-[10px] font-bold uppercase tracking-[0.2em] py-5 rounded-2xl hover:bg-forest-800 transition-all shadow-lg flex items-center justify-center gap-2"
+               >
+                 {savingId === 'new-category' ? 'Creating...' : 'Create Category'}
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Add Service Item Modal */}
+       {showItemModal && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-forest-900/40 backdrop-blur-sm">
+           <div className="max-w-lg w-full bg-white rounded-[2.5rem] shadow-2xl p-8 border border-cream-200">
+             <div className="flex items-center justify-between mb-8">
+               <h3 className="text-2xl font-serif text-forest-900">New Service</h3>
+               <button onClick={() => setShowItemModal(null)} className="p-2 hover:bg-cream-50 rounded-full transition-colors">
+                 <X className="w-5 h-5 text-forest-800/40" />
+               </button>
+             </div>
+             <div className="space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2 col-span-full">
+                   <label className="block text-[10px] font-bold uppercase tracking-widest text-forest-800/60 ml-1">Service Name</label>
+                   <input
+                     autoFocus
+                     value={newTitle}
+                     onChange={e => setNewTitle(e.target.value)}
+                     className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-sage-300 transition-all text-forest-900"
+                     placeholder="e.g., Signature Glow Facial"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <label className="block text-[10px] font-bold uppercase tracking-widest text-forest-800/60 ml-1">Price</label>
+                   <div className="relative">
+                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sage-500" />
+                     <input
+                       value={newPrice}
+                       onChange={e => setNewPrice(e.target.value)}
+                       className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-forest-900 focus:outline-none focus:ring-2 focus:ring-sage-300 transition-all"
+                     />
+                   </div>
+                 </div>
+                 <div className="space-y-2">
+                   <label className="block text-[10px] font-bold uppercase tracking-widest text-forest-800/60 ml-1">Duration</label>
+                   <div className="relative">
+                     <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sage-500" />
+                     <input
+                       value={newDuration}
+                       onChange={e => setNewDuration(e.target.value)}
+                       className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-forest-900 focus:outline-none focus:ring-2 focus:ring-sage-300 transition-all"
+                     />
+                   </div>
+                 </div>
+               </div>
+               <div className="space-y-2">
+                 <label className="block text-[10px] font-bold uppercase tracking-widest text-forest-800/60 ml-1">Description</label>
+                 <textarea
+                   value={newDescription}
+                   onChange={e => setNewDescription(e.target.value)}
+                   className="w-full bg-[#FDFCF9] border border-[#F0EDE6] rounded-xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-sage-300 transition-all text-forest-900 resize-none h-24"
+                   placeholder="Describe this service..."
+                 />
+               </div>
+               <button
+                 onClick={() => handleAddItem(showItemModal)}
+                 disabled={savingId === 'new-item' || !newTitle}
+                 className="w-full bg-forest-900 text-cream-50 text-[10px] font-bold uppercase tracking-[0.2em] py-5 rounded-2xl hover:bg-forest-800 transition-all shadow-lg flex items-center justify-center gap-2"
+               >
+                 {savingId === 'new-item' ? 'Adding...' : 'Add Service Item'}
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
     </div>
   );
 };
